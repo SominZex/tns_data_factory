@@ -160,8 +160,9 @@ def fnb_performance_analysis(store_data, all_data):
     st.plotly_chart(fig_fnb)
 
     def highlight_negative_variance(s):
-        return ['background-color: red' if v < 0 else '' for v in s]
-    
+        numeric_values = pd.to_numeric(s, errors='coerce')
+        return ['background-color: red' if v < 0 else '' for v in numeric_values]
+
 
     fnb_performance['contribution'] = fnb_performance['contribution'].map(lambda x: f"{x:.2f}%")
     fnb_performance['Company Standard'] = fnb_performance['Company Standard'].map(lambda x: f"{x:.2f}%")
@@ -192,12 +193,14 @@ def fnb_performance_analysis(store_data, all_data):
             mime='text/csv',
         )
 
+    fnb_performance['contribution_float'] = pd.to_numeric(fnb_performance['contribution'].astype(str).str.rstrip('%'), errors='coerce')
+    fnb_performance['Company Standard_float'] = pd.to_numeric(fnb_performance['Company Standard'].astype(str).str.rstrip('%'), errors='coerce')
+
     # Line chart for contribution vs Company Standard
     fig_line = go.Figure()
-
     fig_line.add_trace(go.Scatter(
         x=fnb_performance['brandName'], 
-        y=fnb_performance['contribution'].str.rstrip('%').astype('float'), 
+        y=fnb_performance['contribution_float'], 
         mode='lines+markers', 
         name='Contribution', 
         line=dict(color='blue')
@@ -205,7 +208,7 @@ def fnb_performance_analysis(store_data, all_data):
 
     fig_line.add_trace(go.Scatter(
         x=fnb_performance['brandName'], 
-        y=fnb_performance['Company Standard'].str.rstrip('%').astype('float'), 
+        y=fnb_performance['Company Standard_float'], 
         mode='lines+markers', 
         name='Company Standard', 
         line=dict(color='green')

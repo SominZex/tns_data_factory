@@ -7,9 +7,7 @@ from datetime import datetime
 
 def time_slot_analysis(store_data, all_data):
 
-    # st.markdown("<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
     st.markdown("<h4 style='color: green; text-align: center;'>⏰ TIME SLOT ANALYSIS</h4>", unsafe_allow_html=True)
-    # Add separator line below the title
     st.markdown("<hr style='border-top: 2px solid #bbb;'>", unsafe_allow_html=True)
 
     results = {
@@ -29,20 +27,21 @@ def time_slot_analysis(store_data, all_data):
         color_options_time = px.colors.named_colorscales()
         selected_color_time = st.selectbox("Select Color Scale for Time Slot Plot:", color_options_time, key="color_scale_time")
         show_data_labels_time = st.checkbox("Show Data Labels for Time Slot Analysis", value=True, key="show_data_labels_time")
+
     def parse_time_robust(time_str):
         if pd.isna(time_str):
             return None
-            
-        time_str = str(time_str).strip()
         
-        # Remove milliseconds and timezone if present
+        time_str = str(time_str).strip()
+
+        # Remove timezone (.00Z or other formats) and milliseconds
         if '.' in time_str:
             time_str = time_str.split('.')[0]
         
-        # Remove timezone indicators
+        # Remove any potential timezone markers like 'Z', 'GMT', etc.
         time_str = time_str.replace('Z', '').replace('GMT', '').strip()
-        
-        # List of possible time formats
+
+        # List of possible time formats to handle different time representations
         time_formats = [
             '%H:%M:%S',
             '%H:%M',
@@ -51,44 +50,69 @@ def time_slot_analysis(store_data, all_data):
             '%H%M%S',
             '%H%M'
         ]
-        
-        # Try parsing with each format
+
+        # Try parsing the time with each format
         for fmt in time_formats:
             try:
                 parsed_time = datetime.strptime(time_str, fmt)
                 return parsed_time.time()
             except ValueError:
                 continue
-                
+        
         return None
 
     try:
-        # Convert times using the robust parser
+        # Apply the robust time parsing function to the 'time' column
         store_data['parsed_time'] = store_data['time'].apply(parse_time_robust)
         
-        # Convert to datetime for easier handling
+        # Convert the parsed time to a datetime object for further processing
         store_data['time'] = pd.to_datetime(store_data['parsed_time'].astype(str), format='%H:%M:%S', errors='coerce')
         
-        # Drop the intermediate column
+        # Drop the 'parsed_time' column since it's no longer needed
         store_data = store_data.drop('parsed_time', axis=1)
-        
-        # Extract hour
+
+        # Extract the hour from the 'time' column
         store_data['hour'] = store_data['time'].dt.hour
+
+        # Check if parsed time is valid
+        if store_data['time'].isnull().all():
+            st.warning("No valid time data available for the selected store.")
+            return results
+
+        # Check for NaN in storeName column
+        store_data = store_data.dropna(subset=['storeName'])
+
+        # Filter data for the selected store
+        store_data_filtered = store_data[store_data['storeName'] == selected_store]
         
+        # Check if filtered data is empty
+        if store_data_filtered.empty:
+            st.warning(f"No data available for the selected store: {selected_store}.")
+            return results
+
+        # Continue with the analysis after ensuring valid data is available
+        store_data_filtered['orderDate'] = pd.to_datetime(store_data_filtered['orderDate'], errors='coerce')
+
     except Exception as e:
-        st.error(f"Error in time parsing: {str(e)}")
+        st.error(f"Error in time parsing or filtering: {str(e)}")
         return results
 
-    # Check if we have valid data
+    # Check if valid time data is available after parsing
     if store_data['time'].isnull().all():
-        st.warning("No valid time data available for the store.")
+        st.warning("No valid time data available for the selected store.")
         return results
 
-    # Filter the data for the selected store
+    # Filter data for the selected store
     store_data_filtered = store_data[store_data['storeName'] == selected_store]
 
-    # Ensure orderDate is in datetime format
+    # Check if any data is available for the selected store
+    if store_data_filtered.empty:
+        st.warning("No data available for the selected store.")
+        return results
+
+    # Continue with the analysis after ensuring valid data is available
     store_data_filtered['orderDate'] = pd.to_datetime(store_data_filtered['orderDate'], errors='coerce')
+
 
 
 

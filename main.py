@@ -15,8 +15,6 @@ from counter_shelf_analysis import analyze_counter_shelf_products
 from profit import display_profit_metrics
 from grn_analysis import grn_analysis, upload_stock_data
 from PIL import Image
-
-
 import numpy as np
 # import os
 # import io
@@ -171,18 +169,14 @@ def parse_time(time_str):
     Parse time string in various formats to datetime.time object
     """
     try:
-        # Try parsing with milliseconds and Z
         return pd.to_datetime(time_str, format='%H:%M:%S.%fZ').time()
     except ValueError:
         try:
-            # Try parsing HH:MM:SS format
             return pd.to_datetime(time_str, format='%H:%M:%S').time()
         except ValueError:
             try:
-                # Try parsing HH:MM format
                 return pd.to_datetime(time_str, format='%H:%M').time()
             except ValueError:
-                # If all parsing attempts fail, return None
                 return None
 
 if 'data' not in st.session_state:
@@ -238,7 +232,6 @@ if st.session_state.data is not None:
 
     date_range_length = (end_date - start_date).days + 1
 
-
     # Filter data based on selected store and date range
     store_data = data[(data['storeName'] == selected_store) & 
                       (data['orderDate'] >= start_date) & 
@@ -267,7 +260,6 @@ if st.session_state.data is not None:
 
     overall_data_filtered = data[(data['orderDate'] >= start_date) & 
                               (data['orderDate'] <= end_date)]
-
 
     # Calculate total revenue for all stores
     overall_total_revenue = overall_data_filtered['totalProductPrice'].sum()
@@ -320,23 +312,8 @@ if st.session_state.data is not None:
             delta_text = f'<span style="color: grey;">{percentage_difference:.2f}%</span>'
         column.markdown(delta_text, unsafe_allow_html=True)
 
-    # Display KPIs as cards
-    # col1, col2 = st.columns([1, 1], gap="large")
-
-    # # Total Revenue
-    # col1.metric("Store Revenue", f"₹{store_performance['totalRevenue'].values[0]:,.2f}")
-
     # Calculate the percentage difference between overall average sales and store total revenue
     total_revenue_difference_percentage = ((selected_store_total_revenue - overall_avg_sales) / overall_avg_sales) * 100
-
-    # Display the percentage difference right below Store Revenue
-    # col1.markdown(f"<span style='color: {'green' if total_revenue_difference_percentage >= 0 else 'red'};'>{total_revenue_difference_percentage:.2f}%</span>", unsafe_allow_html=True)
-
-    # # # Percentage Contribution to Total Revenue
-    # # col2.metric("% Contribution to Total Revenue", f"{selected_store_percentage_contribution:.2f}%", delta_color="normal")
-
-    # # Overall Average Sales
-    # col2.metric("Overall Average Sales", f"₹{overall_avg_sales:,.2f}")
 
     # Create three equal columns
     col1, col2, col3 = st.columns(3, gap="large")
@@ -395,27 +372,13 @@ if st.session_state.data is not None:
             delta=f"{total_revenue_difference_percentage:+.2f}%",
             delta_color="normal"  
         )
-        # st.markdown(
-        #     f"""
-        #     <div data-testid="metric-container">
-        #         <div data-testid="stMetricLabel" style="justify-content: left;"> Difference</div>
-        #         <div data-testid="stMetricValue" class="{color_class}" style="justify-content: left; font-size: 1.8rem; font-weight: 600;">
-        #             {total_revenue_difference_percentage:+.2f}%
-        #         </div>
-        #     </div>
-        #     """,
-        #     unsafe_allow_html=True
-        # )
-
 
     display_profit_metrics(data, selected_store, start_date, end_date)
-
 
     selected_store_data = data[data['storeName'] == selected_store]
     all_data = data.copy()
     sales_by_category_analysis(store_data, all_data)
     time_slot_analysis(store_data, all_data)
-
 
     selected_store_data = data[data['storeName'] == selected_store]
     selected_store_data['orderDate'] = pd.to_datetime(selected_store_data['orderDate'], format='%d-%m-%Y')
@@ -612,15 +575,6 @@ if st.session_state.data is not None:
     if filtered_data.empty:
         st.markdown("<h4 style='text-align: center; color: red;'>No data available for the selected store and date range.</h4>", unsafe_allow_html=True)
 
-    # # Comment or recommendation box
-    # st.markdown("<h4 style='color: green; text-align: center; margin-top: 0px;'>Recommendations</h4>", unsafe_allow_html=True)
-    # feedback = st.text_area("", "", key="feedback_input_timebased")
-
-    # # Display the feedback below the table
-    # if feedback:
-    #     st.markdown("###### Submitted Feedback:")
-    #     st.write(feedback)
-
     sales_per_channel_analysis(store_data, data)
     top_n_brand_df = top_n_brand_sales_analysis(store_data, all_data)
     # low_performing_brand_analysis(store_data)
@@ -631,8 +585,6 @@ if st.session_state.data is not None:
     fnb_performance_analysis(store_data, all_data)
     analyze_monetized_brands(store_data, all_data)
     analyze_counter_shelf_products(store_data, all_data)
-
-
 
     # Sidebar configuration for file uploader
     with st.sidebar:
@@ -660,10 +612,6 @@ if st.session_state.data is not None:
     # else:
     #     st.info("Upload stock data for analysis.")
 
-
-
-
-
 with st.sidebar:
     st.markdown("### Attach Screenshots")
     uploaded_files = st.file_uploader("Upload screenshots", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
@@ -673,18 +621,12 @@ st.markdown("""
     <h2 style='text-align: center; color: #2e7d32;'>Google Reviews</h2>
 """, unsafe_allow_html=True)
 
-
-
-# Display the uploaded screenshot in the main app if it exists
 if uploaded_files:
     for uploaded_file in uploaded_files:
         image = Image.open(uploaded_file)
         st.image(image, caption="User Review", use_column_width=True)
 else:
     st.info("Upload screenshots from the sidebar to display them here.")
-
-
-
 
 st.markdown("<footer><p style='text-align:center;'>TNS Data Factory © 2024</p></footer>", unsafe_allow_html=True)
 

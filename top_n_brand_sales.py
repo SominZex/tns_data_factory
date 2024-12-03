@@ -56,7 +56,6 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         ~top_n_brands_overall['brandName'].isin(store_data_filtered['brandName'])
     ][['brandName', 'total_sales', 'quantity']].copy()
 
-
     top_n_brands = top_n_brands.merge(overall_brand_sales[['brandName', 'total_sales']], on='brandName', suffixes=('', '_overall'))
 
     company_benchmark = pd.read_csv('./company_bechmark/brand_sales_benchmark.csv')
@@ -97,7 +96,6 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
 
     # Create plots based on selected chart type
     if chart_type == "Bar Chart":
-        # Create Horizontal Bar Chart for Top N Brand Sales
         fig_brand_bar = px.bar(
             top_n_brands,
             y='brandName',
@@ -109,7 +107,6 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         )
         
         if show_data_labels_brand:
-            # Update texttemplate to show Contribution instead of total_sales
             fig_brand_bar.update_traces(
                 texttemplate='%{customdata[0]:.2f}%',
                 textposition='outside',
@@ -160,13 +157,7 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         fig_brand_line.update_layout(width=chart_width, height=chart_height)
         st.plotly_chart(fig_brand_line, use_container_width=False)
 
-    # Display the DataFrame for Top N Brands
-    # st.table(top_n_brands_display.style.apply(
-    #      lambda x: ['background-color: red' if float(val[:-1]) < 0 else '' for val in top_n_brands_display['Variance']],
-    #      subset=['Variance']
-    #  ))
-
-        # Prepare data for comparison
+    # Prepare data for comparison
     comparison_data = top_n_brands_display.melt(
         id_vars=['brandName'], 
         value_vars=['Contribution', 'Company Standard'], 
@@ -174,9 +165,17 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         value_name='Percentage'
     )
 
+    # Ensure the 'Percentage' column is properly handled
+    comparison_data['Percentage'] = comparison_data['Percentage'].apply(
+        lambda x: str(x).rstrip('%') if isinstance(x, str) else x
+    )
 
-    # Convert Percentage values back to numeric for plotting
-    comparison_data['Percentage'] = comparison_data['Percentage'].str.rstrip('%').astype(float)
+    # Convert to numeric, coercing errors to NaN if necessary
+    comparison_data['Percentage'] = pd.to_numeric(comparison_data['Percentage'], errors='coerce')
+
+    # Drop rows with invalid data if needed
+    comparison_data = comparison_data.dropna(subset=['Percentage'])
+
     # Create the line chart
     fig_comparison = px.line(
         comparison_data,
@@ -187,7 +186,7 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         labels={'Percentage': 'Percentage (%)', 'brandName': 'Brand'},
         line_shape='linear', 
         height=600,
-        markers = True,
+        markers=True,
         color_discrete_sequence=['green', 'blue']
     )
 
@@ -203,7 +202,7 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
     # Calculate totals for contribution calculation
     total_sales_benchmark = benchmark_analysis['total_sales'].sum()
     total_profit_benchmark = benchmark_analysis['total_profit'].sum()
-    
+
     # Calculate contributions
     benchmark_analysis['Contribution'] = (benchmark_analysis['total_sales'] / total_sales_benchmark) * 100
     
@@ -256,15 +255,6 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         st.markdown("<h4 style='color: green; text-align: center;'>No missing benchmark brands in the selected store.</h4>", unsafe_allow_html=True)
 
 
-
-    # # Then continue with existing displays
-    # st.markdown("<h4 style='color: green; text-align: center;'>TOP-N BRANDS ANALYSIS</h4>", unsafe_allow_html=True)
-    # st.table(top_n_brands_display.style.apply(
-    #     lambda x: ['background-color: red' if float(val[:-1]) < 0 else '' for val in top_n_brands_display['Variance']],
-    #     subset=['Variance']
-    # ))
-
-
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     st.markdown("<h4 style='color: green; text-align: center;'>Contribution of brand sales VS Company Standard</h4>", unsafe_allow_html=True)
 
@@ -282,12 +272,10 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
     df_100_to_300 = brand_sales[(brand_sales['total_sales'] >= 100) & (brand_sales['total_sales'] <= 300)]
     df_above_300 = brand_sales[brand_sales['total_sales'] > 300]
 
-    # Assign RAG Status based on total sales
-    df_below_100['RAG Status'] = 'Red'    # Brands less than 100 Rs.
-    df_100_to_300['RAG Status'] = 'Amber' # Brands between 100 and 300 Rs.
-    df_above_300['RAG Status'] = 'Green'  # Brands above 300 Rs.
+    df_below_100['RAG Status'] = 'Red' 
+    df_100_to_300['RAG Status'] = 'Amber' 
+    df_above_300['RAG Status'] = 'Green' 
 
-    # Round total_sales and total_profit to 2 decimal places using apply
     df_below_100['total_sales'] = df_below_100['total_sales'].apply(lambda x: f"{x:.2f}")
     df_below_100['total_profit'] = df_below_100['total_profit'].apply(lambda x: f"{x:.2f}")
 
@@ -451,20 +439,12 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
                 f"{(len(missing_top_brands)/n_brands*100):.1f}% of Top {n_brands}"
             )
         
-        # with col2:
-        #     total_missing_qty = missing_top_brands['quantity'].sum()
-        #     st.metric(
-        #         "Total Missing brands quantity",
-        #         f"{total_missing_qty}"
-        #     )
-        
         with col2:
             st.metric(
                 "Present Brands",
                 f"{len(common_brands)}",
                 f"{(len(common_brands)/n_brands*100)}% of Top {n_brands}"
             )
-        
 
         @st.cache_data
         def convert_df(df):
@@ -482,13 +462,7 @@ def top_n_brand_sales_analysis(store_data_filtered, all_data):
         "<h6 style='color: green; text-align: center;'>All Top brands are available in the store</h6>", 
         unsafe_allow_html=True)  
         st.markdown("<hr style='border-top: 2px solid #bbb;'>", unsafe_allow_html=True)
-    # st.markdown(
-    #     "<h2 style='color: green; text-align: center;'>Brands sales between 100 - 300 Rs.</h2>", 
-    #     unsafe_allow_html=True
-    # )       
-    # st.subheader("Brands > 300 Rs.")
-    # st.table(df_above_300_display.style.applymap(lambda x: 'background-color: green' if x == 'Green' else '', subset=['RAG Status']))
-     # Comment or recommendation box with pre-typed recommendations
+
     st.markdown("<h4 style='color: green; text-align: center; margin-top: 0px;'>Recommendations</h4>", unsafe_allow_html=True)
 
         # Default recommendations

@@ -57,29 +57,12 @@ def sales_by_category_analysis(store_data, all_data):
         max_categories = len(sales_per_category)
         top_n = st.number_input("Select Top-N categories to display:", min_value=0, max_value=max_categories, value=min(20, max_categories), key="top_n_category")
 
-        # Color scale selector
-    #    color_options = px.colors.named_colorscales()
-    #    selected_color = st.selectbox("Select Color Scale for Categories:", color_options, key="color_scale_category")
-
-        # Plot type selector
-    #    plot_type = st.selectbox("Select Plot Type:", ["Bar Chart", "Donut Chart"], key="plot_type_category")
-
-        # Data label toggle
-    #    show_data_labels = st.checkbox("Show Data Labels", value=True, key="show_data_labels_category")
-        
-    # Filter the data for Top-N categories
     top_sales_per_category = sales_per_category.head(top_n)
 
-    # code is pasted below, bring it back here if necessary
-
-    # Calculate and display the sum of total_sales, total_quantity, total_cost_price, and profit
     total_sales_sum = sales_per_category['total_sales'].sum()
     total_quantity_sum = sales_per_category['total_quantity'].sum()
     total_cost_price_sum = sales_per_category['total_cost_price'].sum()
     total_profit_sum = sales_per_category['profit'].sum()
-
-    # Display the plot
-    #st.plotly_chart(fig_category)
 
 
     sales_per_category['total_sales'] = sales_per_category['total_sales'].round(2)
@@ -90,18 +73,6 @@ def sales_by_category_analysis(store_data, all_data):
        # Contribution of each category to the total sales (store level)
     sales_per_category['contribution'] = np.where(total_sales != 0,
         (sales_per_category['total_sales'] / total_sales * 100).round(2), 0)
-
-
-    # Calculate the company-wide total sales across all categories
-    # company_total_sales = all_data['totalProductPrice'].sum()
-
-    # # Calculate company standard as the percentage contribution of each category to the company-wide total sales
-    # category_sales_company = all_data.groupby('subCategoryOf').agg(
-    #     company_total_sales=('totalProductPrice', 'sum')
-    # ).reset_index()
-
-    # Merge the company standard into sales_per_category
-    #sales_per_category = pd.merge(sales_per_category, company_benchmark[['subCategoryOf', 'Company Standard']], on='subCategoryOf', how='left')
 
     # Calculate Variance as the percentage difference between the store contribution and company standard
     sales_per_category['variance'] = ((sales_per_category['contribution'] - sales_per_category['Company Standard']) / sales_per_category['Company Standard']).round(2)
@@ -161,30 +132,8 @@ def sales_by_category_analysis(store_data, all_data):
         # Plot type selector
         plot_type_comparison = st.selectbox("Select Plot for 3 Week Average:", ["Line Chart", "Column Chart"], key="plot_type_comparison_1")
 
-        # Color selector
-        #selected_color_comparison = st.selectbox("Select Color Scale for Comparison Chart:", color_options, key="color_scale_comparison_1")
-
         # Toggle data labels
         show_data_labels_comparison = st.checkbox("Show Data Labels", value=True, key="show_data_labels_comparison_1")
-
-        # Color selector for the chart
-    #     color_options = ['Blue', 'Orange', 'Green', 'Red', 'Purple', 'Brown']
-    #     color_options_2 = ['Orange', 'Blue',  'Red','Green',  'Brown','Purple',]
-    #     selected_color_3w_avg = st.selectbox("Select 3-Week Average Bar/Line Color:", color_options, key="color_3w_avg")
-    #     selected_color_week_4 = st.selectbox("Select Week 4 Contribution Bar/Line Color:", color_options_2, key="color_week_4")
-
-    # # Map color names to Plotly color codes
-    # color_mapping = {
-    #     'Blue': 'blue', 
-    #     'Orange': 'orange', 
-    #     'Green': 'green', 
-    #     'Red': 'red', 
-    #     'Purple': 'purple', 
-    #     'Brown': 'brown'
-    # }
-    # # Get the selected colors from the sidebar
-    # color_3w_avg = color_mapping[selected_color_3w_avg]
-    # color_week_4 = color_mapping[selected_color_week_4]
 
     # Select the top-N categories sorted from lowest to highest total sales
     top_sales_per_category_comparison = sales_per_category.head(top_n_comparison)
@@ -269,11 +218,9 @@ def sales_by_category_analysis(store_data, all_data):
     </style>
     """
 
-    # Apply the custom CSS
     st.markdown(custom_css, unsafe_allow_html=True)
 
     with st.container():
-        # Apply styling for negative difference and variance highlighting
         final_df = sales_per_category[['subCategoryOf', 'total_sales', 'contribution', 'Company Standard', 'variance', 'difference']].style.applymap(
             highlight_negative_variance, subset=['variance']).applymap(
             highlight_negative_difference, subset=['difference']).set_table_styles(
@@ -621,10 +568,39 @@ def sales_by_category_analysis(store_data, all_data):
 
     ## Weekly contribution analysis
     # Ensure orderDate is in datetime format
-    store_data['orderDate'] = pd.to_datetime(store_data['orderDate'])
+    store_data['orderDate'] = pd.to_datetime(store_data['orderDate'], errors='coerce')
+
+    store_data = store_data.dropna(subset=['orderDate'])
+
 
     unique_months = store_data['orderDate'].dt.to_period('M').unique()
+
+    if len(unique_months) == 0:
+        st.error("No valid months found in the dataset. Please check your data.")
+        return None
     month_options = [month.strftime('%Y-%m') for month in unique_months]
+
+    if not month_options:
+        st.error("Unable to extract months from the dataset.")
+        return None
+
+    selected_month = st.sidebar.selectbox(
+    "Select Month for 3 Week Average Calculation:", 
+    month_options, 
+    index=len(month_options) - 1,
+    key = "category_sales"
+    )
+    try:
+        selected_month_period = pd.to_datetime(selected_month).to_period('M')
+        
+        # Filter store data by the selected month
+        store_data = store_data[store_data['orderDate'].dt.to_period('M') == selected_month_period]
+        
+        # Proceed with rest of the analysis...
+    except Exception as e:
+        st.error(f"Error processing selected month: {e}")
+        return None 
+
     selected_month = st.sidebar.selectbox("Select Month for 3 Week Average Calculation:", month_options)
 
     # Filter store data by the selected month
