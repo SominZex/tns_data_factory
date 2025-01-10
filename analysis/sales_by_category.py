@@ -13,6 +13,9 @@ def sales_by_category_analysis(store_data, all_data):
         #'monthly_sales': None
     }
 
+    store_data['totalProductPrice'] = pd.to_numeric(store_data['totalProductPrice'], errors='coerce')
+    store_data['quantity'] = pd.to_numeric(store_data['quantity'], errors='coerce')
+    store_data['costPrice'] = pd.to_numeric(store_data['costPrice'], errors='coerce')
 
     st.markdown("<h4 style='color: green; text-align: center; margin-top: 0px;'>💰 SALES BY CATEGORY</h4>", unsafe_allow_html=True)
 
@@ -806,64 +809,3 @@ def sales_by_category_analysis(store_data, all_data):
         results.get('sales_comparison', {}).get('chart', None),
         results.get('sales_comparison', {}).get('data', None),
     )
-
-
-
-    # Create the plot based on the selected type for Sales by Category
-    # if plot_type == "Bar Chart":
-    #     # Update the total_sales column to include the revenue contribution in brackets
-    #     top_sales_per_category['total_sales_with_contribution'] = top_sales_per_category.apply(
-    #         lambda row: f"{row['total_sales']:.2f} ({row['revenue_contribution']:.2f}%)", axis=1
-    #     )
-        
-    #     fig_category = px.bar(
-    #         top_sales_per_category,
-    #         y='subCategoryOf',
-    #         x='total_sales',
-    #         title='Sales per Category',
-    #         labels={'total_sales': 'Total Sales', 'subCategoryOf': 'Category Name'},
-    #         color='total_sales',
-    #         color_continuous_scale=selected_color
-    #     )
-        
-    #     # Display only the revenue contribution as a percentage in text
-    #     if show_data_labels:
-    #         fig_category.update_traces(
-    #             texttemplate='%{customdata[1]:.2f}%',  # Show only the percentage
-    #             textposition='outside',
-    #             customdata=top_sales_per_category[['total_sales', 'revenue_contribution']]
-    #         )
-        
-    #     fig_category.update_layout(
-    #         uniformtext_minsize=8, 
-    #         uniformtext_mode='hide',
-    #         width=1000,
-    #         height=600
-    #     )
-
-
-    # elif plot_type == "Donut Chart":
-    #     # Update the pie chart to display both the label and revenue contribution
-    #     fig_category = px.pie(
-    #         top_sales_per_category,
-    #         names='subCategoryOf',
-    #         values='total_sales',
-    #         title='Sales Distribution per Category',
-    #         hole=0.3,
-    #         color_discrete_sequence=px.colors.qualitative.Plotly
-    #     )
-        
-    #     if show_data_labels:
-    #         # Show label + revenue contribution
-    #         fig_category.update_traces(
-    #             texttemplate='%{label}: %{value:.2f} (%{percent:.2f}%)',
-    #             textinfo='label+value+percent'
-    #         )
-        
-    #     fig_category.update_layout(
-    #         width=1000, 
-    #         height=600 
-    #     )
-
-    # # Store the figure in the results dictionary
-    # results['category_chart'] = fig_category

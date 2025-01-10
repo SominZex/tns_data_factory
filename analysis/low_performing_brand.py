@@ -29,11 +29,6 @@ def low_performing_brand_analysis(store_data):
         # Move the controls to the sidebar
         st.sidebar.markdown("## Filter Options for low performing brands")
         
-        # for idx, row in low_performing_brands.iterrows():
-        #     unique_key = f"data_labl_k_{idx}_{row['brandName']}"
-        #     show_data_labels = st.sidebar.checkbox(f"Show Data Labels for {row['brandName']}", key=unique_key)
-
-        # Choose color scale
         color_scale_low = st.sidebar.selectbox("Select Color Scale for Low sale brands:", 
                                            options=['Viridis', 'Cividis', 'Plasma', 'Blues'], 
                                            index=2, key = "low_performing_color_brands")
@@ -43,38 +38,6 @@ def low_performing_brand_analysis(store_data):
                                          options=['Bar Plot', 'Line Plot'], 
                                          index=0, key = "low_performing_brands_plot")
 
-        # Plot Quantity Sold
-        # if plot_type == 'Bar Plot':
-        #     fig_quantity_sold = px.bar(
-        #         low_performing_brands,
-        #         x='brandName',
-        #         y='quantity_sold',
-        #         title='Quantity Sold by Low Performing Brands',
-        #         labels={'quantity_sold': 'Quantity Sold', 'brandName': 'Brand'},
-        #         color='quantity_sold',
-        #         color_continuous_scale=color_scale
-        #     )
-        # else:  # Line Plot
-        #     fig_quantity_sold = px.line(
-        #         low_performing_brands,
-        #         x='brandName',
-        #         y='quantity_sold',
-        #         title='Quantity Sold by Low Performing Brands',
-        #         labels={'quantity_sold': 'Quantity Sold', 'brandName': 'Brand'},
-        #         markers=True
-        #     )
-
-        # Add data labels for quantity sold plot
-        # if show_data_labels:
-        #     text_position = 'outside' if plot_type == 'Bar Plot' else 'top left'
-        #     fig_quantity_sold.update_traces(text=low_performing_brands['quantity_sold'], textposition=text_position)
-
-        # # Set the size of the Quantity Sold plot
-        # fig_quantity_sold.update_layout(width=1000, height=600)
-        # # Display the Quantity Sold plot
-        # st.plotly_chart(fig_quantity_sold)
-
-        # Sort low_performing_brands by total revenue for the revenue plot
         low_performing_brands_sorted_by_revenue = low_performing_brands.sort_values(by='total_revenue')
 
         # Plot Total Revenue
@@ -88,7 +51,7 @@ def low_performing_brand_analysis(store_data):
                 color='total_revenue',
                 color_continuous_scale=color_scale_low
             )
-        else:  # Line Plot
+        else: 
             fig_total_revenue = px.line(
                 low_performing_brands_sorted_by_revenue,
                 x='brandName',
@@ -97,11 +60,6 @@ def low_performing_brand_analysis(store_data):
                 labels={'total_revenue': 'Total Revenue', 'brandName': 'Brand'},
                 markers=True
             )
-
-        # # Add data labels for total revenue plot
-        # if show_data_labels:
-        #     text_position = 'outside' if plot_type == 'Bar Plot' else 'top left'
-        #     fig_total_revenue.update_traces(text=low_performing_brands_sorted_by_revenue['total_revenue'], textposition=text_position)
 
         # Set the size of the Total Revenue plot
         fig_total_revenue.update_layout(width=1100, height=400)
@@ -114,13 +72,6 @@ def low_performing_brand_analysis(store_data):
 
     low_performing_brands['total_revenue'] = low_performing_brands['total_revenue'].apply(lambda x: f"{x:.2f}")
     low_performing_brands['total_cost'] = low_performing_brands['total_cost'].apply(lambda x: f"{x:.2f}")
-
-    # Display the low performing brands in a table
-    # st.markdown(
-    #     "<h2 style='color: green; text-align: center;'>Low performing Brands sorted by QTY.</h2>", 
-    #     unsafe_allow_html=True
-    # )  
-    #st.table(low_performing_brands[['brandName', 'product_count', 'quantity_sold', 'total_revenue', 'total_cost', 'profit', 'profit_margin']])
 
     @st.cache_data
     def convert_df(df):

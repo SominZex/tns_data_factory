@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
-from sales_by_category import sales_by_category_analysis
-from time_slot_analysis import time_slot_analysis
-from sales_per_channel import sales_per_channel_analysis
-from top_n_brand_sales import top_n_brand_sales_analysis
+from analysis.sales_by_category import sales_by_category_analysis
+from analysis.time_slot_analysis import time_slot_analysis
+from analysis.sales_per_channel import sales_per_channel_analysis
+from analysis.top_n_brand_sales import top_n_brand_sales_analysis
 # from brand_availability import top_n_brand_availability_analysis
-from top_n_products import top_n_product_analysis
+from analysis.top_n_products import top_n_product_analysis
 # from top_n_product_availability import top_n_product_availability_analysis
-from fnb_performance import fnb_performance_analysis
-from monetized_brands import analyze_monetized_brands
-from counter_shelf_analysis import analyze_counter_shelf_products
+from analysis.fnb_performance import fnb_performance_analysis
+from analysis.monetized_brands import analyze_monetized_brands
+from analysis.counter_shelf_analysis import analyze_counter_shelf_products
 # from low_performing_brand import low_performing_brand_analysis
 # from low_performing_products import low_performing_product_analysis
-from profit import display_profit_metrics
-from grn_analysis import grn_analysis, upload_stock_data
+from analysis.profit import display_profit_metrics
+from analysis.grn_analysis import grn_analysis, upload_stock_data
+from analysis.order_analysis import order_analysis
 from PIL import Image
 import numpy as np
 # import os
@@ -374,7 +375,7 @@ if st.session_state.data is not None:
         )
 
     display_profit_metrics(data, selected_store, start_date, end_date)
-
+    order_analysis(store_data)
     selected_store_data = data[data['storeName'] == selected_store]
     all_data = data.copy()
     sales_by_category_analysis(store_data, all_data)
@@ -539,7 +540,6 @@ if st.session_state.data is not None:
 
 
     with col3:  # Monthly KPI
-        # Stylish boundary box for monthly sales KPI
         st.markdown(
             f"""
             <div style='background-color: #f0f0f0; border: 2px solid #0072B8; border-radius: 10px; padding: 8px; width: 250px; margin: auto;'> 
@@ -556,12 +556,10 @@ if st.session_state.data is not None:
             unsafe_allow_html=True
         )
 
-        # Calculate the store average and percentage difference
         store_avg_monthly = average_monthly_sales_per_store[average_monthly_sales_per_store['storeName'] == selected_store]['averageMonthlySales'].mean()
         overall_avg_monthly = 42358 * 30
         percentage_difference_monthly = ((store_avg_monthly - overall_avg_monthly) / overall_avg_monthly) * 100
 
-        # Conditional formatting for percentage difference in monthly sales
         if percentage_difference_monthly > 0:
             st.markdown(f"<h4 style='color: green; text-align: center; margin: 0; font-size: 16px;'>+{percentage_difference_monthly:.2f}%</h4>", unsafe_allow_html=True)
         elif percentage_difference_monthly < 0:
@@ -571,17 +569,12 @@ if st.session_state.data is not None:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Display a message if no data is available for the selected store and date range
     if filtered_data.empty:
         st.markdown("<h4 style='text-align: center; color: red;'>No data available for the selected store and date range.</h4>", unsafe_allow_html=True)
 
     sales_per_channel_analysis(store_data, data)
     top_n_brand_df = top_n_brand_sales_analysis(store_data, all_data)
-    # low_performing_brand_analysis(store_data)
-    #top_n_brand_availability_analysis(store_data_filtered)
     top_n_product_analysis(store_data, all_data)
-    # low_performing_product_analysis(store_data)
-    #top_n_product_availability_analysis(store_data_filtered)
     fnb_performance_analysis(store_data, all_data)
     analyze_monetized_brands(store_data, all_data)
     analyze_counter_shelf_products(store_data, all_data)
