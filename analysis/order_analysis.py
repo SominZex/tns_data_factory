@@ -47,14 +47,13 @@ def order_analysis(store_data):
             (daily_metrics['valid_customers'] / daily_metrics['total_entries']) * 100
         )
 
-        # Create the line chart for customer info collection percentage
-        fig = px.line(
+        # Create the bar chart for customer info collection percentage
+        fig = px.bar(
             daily_metrics,
             x=date_column,
             y='customer_info_percentage',
             title='Customer Info Collection Percentage Over Time',
-            labels={date_column: 'Date', 'customer_info_percentage': 'Customer Info Collection Percentage (%)'},
-            markers=True
+            labels={date_column: 'Date', 'customer_info_percentage': 'Customer Info Collection Percentage (%)'}
         )
         
         fig.update_layout(width=1100, height=400)
@@ -78,3 +77,4 @@ def order_analysis(store_data):
         file_name='filtered_orders.csv',
         mime='text/csv',
     )
+
