@@ -27,9 +27,10 @@ st.markdown("""
     <style>
     /* General web layout */
     .stApp {
-        width: 80%;
-        margin:5%;
-        padding: 8px; /* Padding for better visuals */
+        width: 100%;
+        max-width: 1000px; /* Limit the maximum width for better appearance */
+        margin: 0 auto; /* Center horizontally */
+        padding: 2px; /* Padding for better visuals */
         background-color: white;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
     }
