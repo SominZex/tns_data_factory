@@ -21,10 +21,11 @@ def order_analysis(store_data):
     total_profit = total_revenue - total_cost
 
     # Display metrics
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 , col4 = st.columns(4)
     col1.metric("Total Unique Orders", total_orders)
     col2.metric("Total Quantity", total_quantity)
     col3.metric("Customer Info Collected", f"{customer_collection_percentage:.2f}%")
+    col4.metric('Total Numbers Collected', total_customers)
 
     # Check if a date column exists or if it's named differently
     date_column = None
@@ -37,29 +38,27 @@ def order_analysis(store_data):
         # Convert date column to datetime if it's not already
         store_data[date_column] = pd.to_datetime(store_data[date_column])
 
-        # Aggregate data for plotting the customer info collection percentage
+        # Aggregate data for plotting the number of valid customers collected
         daily_metrics = store_data.groupby(date_column).agg(
             valid_customers=('valid_customer', 'sum'),
             total_entries=('valid_customer', 'count')
         ).reset_index()
 
-        daily_metrics['customer_info_percentage'] = (
-            (daily_metrics['valid_customers'] / daily_metrics['total_entries']) * 100
-        )
-
-        # Create the bar chart for customer info collection percentage
+        # Create the bar chart for the number of valid customers collected
         fig = px.bar(
             daily_metrics,
             x=date_column,
-            y='customer_info_percentage',
-            title='Customer Info Collection Percentage Over Time',
-            labels={date_column: 'Date', 'customer_info_percentage': 'Customer Info Collection Percentage (%)'}
+            y='valid_customers',
+            title='Number of Valid Customers Collected Over Time',
+            labels={date_column: 'Date', 'valid_customers': 'Valid Customers Collected'},
+            text='valid_customers' 
         )
         
+        fig.update_traces(textposition='outside')  
         fig.update_layout(width=1100, height=400)
         st.plotly_chart(fig)
     else:
-        st.warning("No date column found in the dataset. Cannot plot customer info percentage over time.")
+        st.warning("No date column found in the dataset. Cannot plot valid customers over time.")
 
     # Prepare data for download
     store_data['totalProductPrice'] = store_data['totalProductPrice'].apply(lambda x: f"{x:.2f}")
@@ -77,3 +76,4 @@ def order_analysis(store_data):
         file_name='filtered_orders.csv',
         mime='text/csv',
     )
+
