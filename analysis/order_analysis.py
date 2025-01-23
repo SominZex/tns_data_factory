@@ -14,7 +14,7 @@ def order_analysis(store_data):
     customer_collection_percentage = (total_customers / total_entries) * 100 if total_entries > 0 else 0
 
     # Calculate total orders, total quantity sold, and total revenue
-    total_orders = store_data['invoice'].nunique()
+    total_orders_count = len(store_data['invoice'])
     total_quantity = store_data['quantity'].sum()
     total_revenue = store_data['totalProductPrice'].sum()
     total_cost = store_data['costPrice'].sum()
@@ -22,7 +22,7 @@ def order_analysis(store_data):
 
     # Display metrics
     col1, col2, col3 , col4 = st.columns(4)
-    col1.metric("Total Unique Orders", total_orders)
+    col1.metric("Total Unique Orders", total_orders_count)
     col2.metric("Total Quantity", total_quantity)
     col3.metric("Customer Info Collected", f"{customer_collection_percentage:.2f}%")
     col4.metric('Total Numbers Collected', total_customers)
@@ -76,4 +76,3 @@ def order_analysis(store_data):
         file_name='filtered_orders.csv',
         mime='text/csv',
     )
-
